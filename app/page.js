@@ -1,101 +1,134 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState, useEffect } from "react";
+
+const Page = () => {
+  const [title, setTitle] = useState("");
+  const [desc, setDesc] = useState("");
+  const [mainTask, setMainTask] = useState([]);
+  const [editIndex, setEditIndex] = useState(null); // Track the index of the task being edited
+
+  // Load tasks from local storage when component mounts
+  useEffect(() => {
+    const savedTasks = JSON.parse(localStorage.getItem("tasks"));
+    if (savedTasks) {
+      setMainTask(savedTasks);
+    }
+  }, []);
+
+  // Update local storage whenever mainTask changes
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(mainTask));
+  }, [mainTask]);
+
+  const submitHandler = (e) => {
+    e.preventDefault();
+    if (title.trim() === "" || desc.trim() === "") {
+      alert("Please enter both a title and description.");
+      return;
+    }
+
+    if (editIndex !== null) {
+      // Update the existing task
+      const updatedTasks = mainTask.map((task, index) =>
+        index === editIndex ? { ...task, title, desc } : task
+      );
+      setMainTask(updatedTasks);
+      setEditIndex(null); // Reset edit mode
+    } else {
+      // Add new task
+      setMainTask([...mainTask, { title, desc, done: false }]);
+    }
+
+    setTitle("");
+    setDesc("");
+  };
+
+  const editHandler = (i) => {
+    const taskToEdit = mainTask[i];
+    setTitle(taskToEdit.title);
+    setDesc(taskToEdit.desc);
+    setEditIndex(i);
+  };
+
+  const deleteHandler = (i) => {
+    const updatedTasks = mainTask.filter((_, index) => index !== i);
+    setMainTask(updatedTasks);
+  };
+
+  const markAsDoneHandler = (i) => {
+    const updatedTasks = mainTask.map((task, index) =>
+      index === i ? { ...task, done: !task.done } : task
+    );
+    setMainTask(updatedTasks);
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <div className="bg-zinc-900 w-screen min-h-screen flex flex-col items-center">
+      <h1 className="bg-zinc-700 text-center w-screen h-10 text-white font-bold text-3xl">
+        Todo List
+      </h1>
+      <form
+        onSubmit={submitHandler}
+        className="w-1/4 bg-zinc-700 flex flex-col items-center mt-6 rounded-md p-5 gap-3"
+      >
+        <input
+          type="text"
+          placeholder="Title"
+          className="px-9 py-1 text-lg outline-none text-zinc-950 rounded-md"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
         />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+        <input
+          type="text"
+          placeholder="Description"
+          className="px-9 py-1 text-lg outline-none text-zinc-950 rounded-md"
+          value={desc}
+          onChange={(e) => setDesc(e.target.value)}
+        />
+        <button className="bg-green-500 px-10 py-2 text-black rounded-md mt-4 font-semibold">
+          {editIndex !== null ? "Update Task" : "Create Task"}
+        </button>
+      </form>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      <div className="bg-zinc-800 w-full mt-10 p-6 text-white rounded-md">
+        {mainTask.length > 0 ? (
+          mainTask.map((t, i) => (
+            <li
+              key={i}
+              className="flex justify-between items-center w-full p-2"
+            >
+              <h2 className={`text-xl ${t.done ? "line-through text-green-400" : "text-white"}`}>
+                {t.title}
+              </h2>
+              <h2 className={`text-xl ${t.done ? "line-through text-green-400" : "text-white"}`}>
+                {t.desc}
+              </h2>
+              <div className="flex gap-2">
+                <button className="p-1" onClick={() => editHandler(i)}>
+                  ✏️
+                </button>
+                <button
+                  onClick={() => markAsDoneHandler(i)}
+                  className="text-white rounded-md p-1"
+                >
+                  {t.done ? "Undo" : "✔️"}
+                </button>
+                <button
+                  onClick={() => deleteHandler(i)}
+                  className="rounded-md p-1"
+                >
+                  ❌
+                </button>
+              </div>
+            </li>
+          ))
+        ) : (
+          <h2>No tasks.</h2>
+        )}
+      </div>
     </div>
   );
-}
+};
+
+export default Page;
